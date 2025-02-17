@@ -42,7 +42,6 @@ def image_mars():
     return res_image
 
 
-
 @app.route('/promotion_image')
 def promotion_image():
     picture_url = url_for('static', filename='image/mars.jpg')
@@ -80,6 +79,7 @@ def promotion_image():
             </body>
             </html>"""
     return prom_res
+
 
 if __name__ == "__main__":
     app.run(port=8080, host='127.0.0.1')
