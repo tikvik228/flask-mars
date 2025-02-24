@@ -54,5 +54,10 @@ def login():
 def success():
     return render_template('success.html')
 
+@app.route('/distribution')
+def distribution():
+    return render_template('distribution.html', astro_list=["Ридли Скотт", "Марк Уотни", "Энди Уир"])
+
+
 if __name__ == "__main__":
     app.run(port=8080, host='127.0.0.1')
