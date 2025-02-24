@@ -1,4 +1,5 @@
-h1 {
-color: #ee0000;
-text-align: center;
+
+h1.access {
+background: url(/static/image/mars_emblem.png) no-repeat;
+padding-left: 160px;
 }

@@ -1,11 +1,22 @@
-from flask import Flask, url_for, request, render_template
+from flask import Flask, url_for, request, render_template, redirect
+from flask_wtf import FlaskForm
+from wtforms import StringField, PasswordField, BooleanField, SubmitField
+from wtforms.validators import DataRequired
+
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'ytrewq'
 
-@app.route('/<title>')
-@app.route('/index/<title>')
-def index(title):
-    return render_template('base.html', title=title)
+
+class LoginForm(FlaskForm):
+    userid = StringField('ID астронавта', validators=[DataRequired()])
+    password_1 = PasswordField('Пароль', validators=[DataRequired()])
+    captainid = StringField('ID капитана', validators=[DataRequired()])
+    captain_password = PasswordField('Пароль капитана', validators=[DataRequired()])
+    submit = SubmitField('Доступ')
+@app.route('/')
+def index():
+    return redirect("/login")
 
 @app.route('/training/<prof>')
 def training(prof):
@@ -30,6 +41,18 @@ def auto_answer():
     profile["ready"] = "--"
     return render_template("auto_answer.html", **profile)
 
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        return redirect('/success')
+    return render_template('login.html', title='Авторизация', form=form)
+
+
+@app.route('/success')
+def success():
+    return render_template('success.html')
 
 if __name__ == "__main__":
     app.run(port=8080, host='127.0.0.1')
