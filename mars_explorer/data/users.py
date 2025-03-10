@@ -23,3 +23,5 @@ class User(SqlAlchemyBase):
     def set_password(self, password):
         self.hashed_password = generate_password_hash(password)
 
+    def __repr__(self):
+        return f'<Colonist> {self.id} {self.surname} {self.name}'
