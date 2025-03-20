@@ -5,7 +5,7 @@ from data.users import User
 from data.jobs import Jobs
 from data.register import RegisterForm
 from data.login_form import LoginForm
-
+from data.add_job import AddJobForm
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ytrewq'
 login_manager = LoginManager()
@@ -111,6 +111,21 @@ def register():
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
 
-
+@app.route('/addjob',  methods=['GET', 'POST'])
+def addjob():
+    add_form = AddJobForm()
+    if add_form.validate_on_submit():
+        db_sess = db_session.create_session()
+        jobs = Jobs(
+            job=add_form.job.data,
+            teamleader=add_form.team_leader.data,
+            work_size=add_form.work_size.data,
+            collaborators=add_form.collaborators.data,
+            is_finished=add_form.is_finished.data
+        )
+        db_sess.add(jobs)
+        db_sess.commit()
+        return redirect('/index')
+    return render_template('add_job.html', title='Adding job',form=add_form)
 if __name__ == "__main__":
     main()
