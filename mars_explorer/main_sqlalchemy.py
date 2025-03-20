@@ -112,7 +112,7 @@ def register():
         return redirect('/login')
     return render_template('register.html', title='Регистрация', form=form)
 
-@app.route('/addjob',  methods=['GET', 'POST'])
+@app.route('/add_job',  methods=['GET', 'POST'])
 def addjob():
     add_form = AddJobForm()
     if add_form.validate_on_submit():
@@ -161,7 +161,7 @@ def job_edit(id):
             return redirect('/')
         else:
             abort(404)
-    return render_template('addjob.html', title='Job Edit', form=form)
+    return render_template('add_job.html', title='Job Edit', form=form)
 
 @app.route('/job_delete/<int:id>', methods=['GET', 'POST'])
 @login_required
