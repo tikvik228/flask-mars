@@ -9,6 +9,7 @@ from data.login_form import LoginForm
 from data.add_job import AddJobForm
 import jobs_api
 from users_resources import UserListResource, UsersResource
+from jobs_resources import JobsResource, JobsListResource
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ytrewq'
@@ -59,6 +60,10 @@ def main():
     api.add_resource(UserListResource, '/api/v2/users')
     # для одного объекта
     api.add_resource(UsersResource, '/api/v2/users/<user_id>')
+    # для списка объектов
+    api.add_resource(JobsListResource, '/api/v2/jobs')
+    # для одного объекта
+    api.add_resource(JobsResource, '/api/v2/jobs/<job_id>')
     app.run()
 @app.route('/')
 def base():
