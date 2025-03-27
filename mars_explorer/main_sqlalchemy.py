@@ -1,5 +1,6 @@
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask import Flask, render_template, redirect, request, abort, Blueprint
+from flask_restful import Api
 from data import db_session
 from data.users import User
 from data.jobs import Jobs
@@ -7,10 +8,13 @@ from data.register import RegisterForm
 from data.login_form import LoginForm
 from data.add_job import AddJobForm
 import jobs_api
+from users_resources import UserListResource, UsersResource
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ytrewq'
 login_manager = LoginManager()
 login_manager.init_app(app)
+api = Api(app)
 '''db_session.global_init("db/mars_explorer.db")
 blueprint = Blueprint(
     'jobs_api',
@@ -51,6 +55,10 @@ def main():
         user.set_password(user.hashed_password)
         session.add(user)'''
     app.register_blueprint(jobs_api.blueprint)
+    # для списка объектов
+    api.add_resource(UserListResource, '/api/v2/users')
+    # для одного объекта
+    api.add_resource(UsersResource, '/api/v2/users/<user_id>')
     app.run()
 @app.route('/')
 def base():
@@ -59,7 +67,6 @@ def base():
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
-    print(type(user_id))
     return db_sess.query(User).get(user_id)
 
 @app.route('/logout')
