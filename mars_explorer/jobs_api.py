@@ -49,3 +49,35 @@ def create_job():
     db_sess.add(job)
     db_sess.commit()
     return jsonify({'id': job.id})
+
+
+@blueprint.route('/api/jobs/<job_id>', methods=['DELETE'])
+def delete_job(job_id):
+    db_sess = db_session.create_session()
+    job = db_sess.query(Jobs).get(job_id)
+    if not job:
+        return make_response(jsonify({'error': 'Not found'}), 404)
+    db_sess.delete(job)
+    db_sess.commit()
+    return jsonify({'success': 'OK'})
+
+
+@blueprint.route('/api/jobs/<job_id>', methods=['PUT'])
+def edit_job(job_id):
+    if not request.json:
+        return make_response(jsonify({'error': 'Empty request'}), 400)
+    try:
+        job_id = int(job_id)
+    except ValueError:
+        return make_response(jsonify({'error': 'Invalid id'}), 400)
+    db_sess = db_session.create_session()
+    jobs = db_sess.query(Jobs).get(job_id)
+    if not jobs:
+        return make_response(jsonify({'error': 'Not found'}), 404)
+    jobs.job = request.json['job'] if 'job' in request.json else jobs.job
+    jobs.teamleader = request.json['teamleader'] if 'teamleader' in request.json else jobs.teamleader
+    jobs.work_size = request.json['work_size'] if 'work_size' in request.json else jobs.work_size
+    jobs.collaborators = request.json['collaborators'] if 'collaborators' in request.json else jobs.collaborators
+    jobs.is_finished = request.json['is_finished'] if 'is_finished' in request.json else jobs.is_finished
+    db_sess.commit()
+    return jsonify({'success': 'OK'})

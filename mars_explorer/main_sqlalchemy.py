@@ -8,6 +8,7 @@ from data.register import RegisterForm
 from data.login_form import LoginForm
 from data.add_job import AddJobForm
 import jobs_api
+import users_api
 from users_resources import UserListResource, UsersResource
 from jobs_resources import JobsResource, JobsListResource
 
@@ -56,6 +57,7 @@ def main():
         user.set_password(user.hashed_password)
         session.add(user)'''
     app.register_blueprint(jobs_api.blueprint)
+    app.register_blueprint(users_api.blueprint)
     # для списка объектов
     api.add_resource(UserListResource, '/api/v2/users')
     # для одного объекта
