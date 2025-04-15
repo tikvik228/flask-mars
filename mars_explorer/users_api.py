@@ -38,9 +38,11 @@ def get_one_user(user_id):
 def create_user():
     if not request.json:
         return make_response(jsonify({'error': 'Empty request'}), 400)
-    elif not all(key in request.json for key in ['surname', 'name', 'age', 'position', 'speciality', 'address', 'email']):
+    elif not all(key in request.json for key in ['surname', 'name', 'age', 'position', 'speciality', 'address', 'email', 'hashed_password']):
         return make_response(jsonify({'error': 'Bad request'}), 400)
     db_sess = db_session.create_session()
+    if db_sess.query(User).filter(User.email == request.json['email']).first():
+        return make_response(jsonify({'error': 'Email already exist'}), 409)
     user=User(
         surname=request.json['surname'],
         name=request.json['name'],
@@ -48,14 +50,15 @@ def create_user():
         position=request.json['position'],
         address=request.json['address'],
         email=request.json['email'],
-        speciality=request.json['speciality']
+        speciality=request.json['speciality'],
     )
+    user.set_password(request.json['hashed_password'])
     db_sess.add(user)
     db_sess.commit()
     return jsonify({'id': user.id})
 
 
-@blueprint.route('/api/jobs/<user_id>', methods=['DELETE'])
+@blueprint.route('/api/users/<user_id>', methods=['DELETE'])
 def delete_user(user_id):
     db_sess = db_session.create_session()
     user = db_sess.query(User).get(user_id)
@@ -66,7 +69,7 @@ def delete_user(user_id):
     return jsonify({'success': 'OK'})
 
 
-@blueprint.route('/api/jobs/<user_id>', methods=['PUT'])
+@blueprint.route('/api/users/<user_id>', methods=['PUT'])
 def edit_user(user_id):
     if not request.json:
         return make_response(jsonify({'error': 'Empty request'}), 400)
@@ -85,5 +88,7 @@ def edit_user(user_id):
     users.speciality = request.json['speciality'] if 'speciality' in request.json else users.speciality
     users.address = request.json['address'] if 'address' in request.json else users.address
     users.email = request.json['email'] if 'email' in request.json else users.email
+    if 'hashed_password' in request.json:
+        users.set_password(request.json['hashed_password'])
     db_sess.commit()
     return jsonify({'success': 'OK'})
