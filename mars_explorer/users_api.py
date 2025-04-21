@@ -14,7 +14,7 @@ def get_users():
     return jsonify(
         {
             'users':
-                [item.to_dict(only=('id', 'surname', 'name', 'age', 'position',
+                [item.to_dict(only=('id', 'surname', 'name', 'age', 'position', 'city_from',
                                     'speciality', 'address', 'email', 'hashed_password', 'modified_date')) for item in users]
         }
     )
@@ -30,7 +30,7 @@ def get_one_user(user_id):
     users = db_sess.query(User).get(user_id)
     if not users:
         return make_response(jsonify({'error': 'Not found'}), 404)
-    return jsonify({'users': users.to_dict(only=('id', 'surname', 'name', 'age', 'position',
+    return jsonify({'users': users.to_dict(only=('id', 'surname', 'name', 'age', 'position', 'city_from',
                     'speciality', 'address', 'email', 'hashed_password', 'modified_date'))})
 
 
@@ -38,7 +38,8 @@ def get_one_user(user_id):
 def create_user():
     if not request.json:
         return make_response(jsonify({'error': 'Empty request'}), 400)
-    elif not all(key in request.json for key in ['surname', 'name', 'age', 'position', 'speciality', 'address', 'email', 'hashed_password']):
+    elif not all(key in request.json for key in ['surname', 'name', 'age', 'position', 'speciality',
+                                                 'city_from', 'address', 'email', 'hashed_password']):
         return make_response(jsonify({'error': 'Bad request'}), 400)
     db_sess = db_session.create_session()
     if db_sess.query(User).filter(User.email == request.json['email']).first():
@@ -50,6 +51,7 @@ def create_user():
         position=request.json['position'],
         address=request.json['address'],
         email=request.json['email'],
+        city_from=request.json['city_from'],
         speciality=request.json['speciality'],
     )
     user.set_password(request.json['hashed_password'])
@@ -88,6 +90,7 @@ def edit_user(user_id):
     users.speciality = request.json['speciality'] if 'speciality' in request.json else users.speciality
     users.address = request.json['address'] if 'address' in request.json else users.address
     users.email = request.json['email'] if 'email' in request.json else users.email
+    users.city_from = request.json['city_from'] if 'city_from' in request.json else users.city_from
     if 'hashed_password' in request.json:
         users.set_password(request.json['hashed_password'])
     db_sess.commit()

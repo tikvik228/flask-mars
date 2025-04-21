@@ -1,5 +1,5 @@
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from flask import Flask, render_template, redirect, request, abort, Blueprint
+from flask import Flask, render_template, redirect, request, abort, Blueprint, make_response, jsonify
 from flask_restful import Api
 from data import db_session
 from data.users import User
@@ -11,6 +11,8 @@ import jobs_api
 import users_api
 from users_resources import UserListResource, UsersResource
 from jobs_resources import JobsResource, JobsListResource
+from requests import get
+import json
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ytrewq'
@@ -124,7 +126,8 @@ def register():
             position=form.position.data,
             email=form.email.data,
             speciality=form.speciality.data,
-            address=form.address.data
+            address=form.address.data,
+            city_from=form.city_from.data
         )
         user.set_password(form.password.data)
         db_sess.add(user)
@@ -197,6 +200,61 @@ def job_delete(id):
         abort(404)
     return redirect('/')
 
+@app.route('/users_show/<int:user_id>', methods=['GET'])
+def users_show(user_id):
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        abort(400)
+    name_of_city = get(f'http://localhost:5000/api/users/{user_id}').json()["users"]["city_from"]
+    geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
+
+    geocoder_params = {
+        "apikey": "8013b162-6b42-4997-9691-77b7074026e0",
+        "geocode": name_of_city,
+        "format": "json"}
+
+    response = get(geocoder_api_server, params=geocoder_params)
+
+    if not response:
+        print("oops")
+        pass
+
+    # Преобразуем ответ в json-объект
+    json_response = response.json()
+    # Получаем первый топоним из ответа геокодера.
+    toponym = json_response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
+    # Координаты центра топонима:
+    toponym_coodrinates = toponym["Point"]["pos"]
+    # Долгота и широта:
+    toponym_longitude, toponym_lattitude = toponym_coodrinates.split(" ")
+
+    delta = "0.005"
+    apikey = "f3a0fe3a-b07e-4840-a1da-06f18b2ddf13"
+
+    # Собираем параметры для запроса к StaticMapsAPI:
+    map_params = {
+        "ll": ",".join([toponym_longitude, toponym_lattitude]),
+        "spn": ",".join([delta, delta]),
+        "apikey": apikey,
+
+    }
+
+    map_api_server = "https://static-maps.yandex.ru/v1"
+    # ... и выполняем запрос
+    response = get(map_api_server, params=map_params)
+    way_to_img = 'flask_evgen/mars_explorer/static/image/home_img.png'
+    with open('home_img.png', "wb") as file:
+        file.write(response.content)
+    return render_template('users_home.html')
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': 'Not found'}), 404)
+
+
+@app.errorhandler(400)
+def bad_request(_):
+    return make_response(jsonify({'error': 'Bad Request'}), 400)
 
 if __name__ == '__main__':
     main()

@@ -28,7 +28,7 @@ class UsersResource(Resource):
         abort_if_user_not_found(user_id)
         session = db_session.create_session()
         users = session.query(User).get(user_id)
-        return jsonify({'user': users.to_dict(only=('name', 'surname', 'age', 'position', 'speciality',
+        return jsonify({'user': users.to_dict(only=('name', 'surname', 'age', 'position', 'speciality', 'city_from',
                                                     'address', 'email', 'hashed_password'))})
 
     def delete(self, user_id):
@@ -44,7 +44,7 @@ class UserListResource(Resource):
     def get(self):
         session = db_session.create_session()
         users = session.query(User).all()
-        return jsonify({'user': [i.to_dict(only=('name', 'surname', 'age', 'position', 'speciality',
+        return jsonify({'user': [i.to_dict(only=('name', 'surname', 'age', 'position', 'speciality', 'city_from',
                                                     'address', 'email', 'hashed_password')) for i in users]})
 
     def post(self):
@@ -56,6 +56,7 @@ class UserListResource(Resource):
             age=args['age'],
             position=args['position'],
             speciality=args['speciality'],
+            city_from=args['city_from'],
             email=args['email'],
             address=args['address'],
             hashed_password=args['hashed_password']
