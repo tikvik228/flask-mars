@@ -13,6 +13,7 @@ from users_resources import UserListResource, UsersResource
 from jobs_resources import JobsResource, JobsListResource
 from requests import get
 import json
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ytrewq'
@@ -207,6 +208,8 @@ def users_show(user_id):
     except ValueError:
         abort(400)
     name_of_city = get(f'http://localhost:5000/api/users/{user_id}').json()["users"]["city_from"]
+    name_and_surname = get(f'http://localhost:5000/api/users/{user_id}').json()["users"]["name"] + " " + \
+        get(f'http://localhost:5000/api/users/{user_id}').json()["users"]["surname"]
     geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
 
     geocoder_params = {
@@ -236,17 +239,26 @@ def users_show(user_id):
     map_params = {
         "ll": ",".join([toponym_longitude, toponym_lattitude]),
         "spn": ",".join([delta, delta]),
+        "z": 10,
         "apikey": apikey,
-
+        "maptype": 'admin',
+        "theme": "dark"
     }
+    '''map_params = {"ll": ','.join(map(str, self.map_ll)),
+                  "z": self.map_zoom,
+                  "theme": self.theme,
+                  "maptype": self.map_l,
+                  "lang": "ru_RU",
+                  "pt": ','.join(map(str, self.point_marker)),
+                  "apikey": self.api_key}'''
 
     map_api_server = "https://static-maps.yandex.ru/v1"
     # ... и выполняем запрос
     response = get(map_api_server, params=map_params)
     way_to_img = 'flask_evgen/mars_explorer/static/image/home_img.png'
-    with open('home_img.png', "wb") as file:
+    with open('static/image/home_img.png', mode="wb") as file:
         file.write(response.content)
-    return render_template('users_home.html')
+    return render_template('users_home.html', name=name_and_surname)
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
