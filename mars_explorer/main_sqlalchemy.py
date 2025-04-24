@@ -86,6 +86,7 @@ def logout():
     return redirect("/")
 
 @app.route('/index')
+@login_required
 def index():
     db_session.global_init("db/mars_explorer.db")
     session = db_session.create_session()
@@ -207,11 +208,28 @@ def users_show(user_id):
         user_id = int(user_id)
     except ValueError:
         abort(400)
+    '''
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        abort(400)
+
+    reqw = get(f'http://localhost:5000/api/users/{user_id}')
+    print(reqw.status_code)
+    if reqw.status_code == 400:
+        print("sfgqg")
+        abort(400)
+    elif reqw.status_code == 409:
+        print("wegjirq")
+        abort(404)
+    else:
+        name_of_city = reqw.json()["users"]["city_from"]
+        name_and_surname = reqw.json()["users"]["name"] + " " + reqw.json()["users"]["surname"]
+    '''
     name_of_city = get(f'http://localhost:5000/api/users/{user_id}').json()["users"]["city_from"]
     name_and_surname = get(f'http://localhost:5000/api/users/{user_id}').json()["users"]["name"] + " " + \
         get(f'http://localhost:5000/api/users/{user_id}').json()["users"]["surname"]
     geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
-
     geocoder_params = {
         "apikey": "8013b162-6b42-4997-9691-77b7074026e0",
         "geocode": name_of_city,
@@ -225,8 +243,12 @@ def users_show(user_id):
 
     # Преобразуем ответ в json-объект
     json_response = response.json()
-    # Получаем первый топоним из ответа геокодера.
-    toponym = json_response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
+
+    try:
+        # Получаем первый топоним из ответа геокодера.
+        toponym = json_response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
+    except IndexError:
+        abort(404)
     # Координаты центра топонима:
     toponym_coodrinates = toponym["Point"]["pos"]
     # Долгота и широта:
@@ -241,7 +263,7 @@ def users_show(user_id):
         "spn": ",".join([delta, delta]),
         "z": 10,
         "apikey": apikey,
-        "maptype": 'admin',
+        "maptype": 'map',
         "theme": "dark"
     }
     '''map_params = {"ll": ','.join(map(str, self.map_ll)),
